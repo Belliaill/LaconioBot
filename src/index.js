@@ -3,6 +3,8 @@ import { Context, Telegraf, Markup } from "telegraf";
 import { DB } from "./db.js";
 import LocalSession from "telegraf-session-local";
 
+dotenv.config();
+
 const BotState = {
   Chatting: "chatting",
   GettingDonate: "getting-donate",
@@ -10,8 +12,7 @@ const BotState = {
   None: "",
 };
 
-const adminChatId = "-1001829016412";
-dotenv.config();
+const adminChatId = process.env.ADMIN_CHAT_ID;
 
 const init = {
   users: [],
@@ -56,12 +57,14 @@ bot.start((ctx) => {
 });
 
 bot.on("message", (ctx) => {
-  if (ctx.chat.id == adminChatId && ctx.message.reply_to_message) {
-    const users = db.get((state) => state.users);
-    const user = users.find((u) => {
-      return u.name == ctx.message.reply_to_message.forward_sender_name;
-    });
-    bot.telegram.sendMessage(user.chatId, ctx.message.text);
+  if (ctx.chat.id == adminChatId) {
+    if (ctx.message.reply_to_message) {
+      const users = db.get((state) => state.users);
+      const user = users.find((u) => {
+        return u.name == ctx.message.reply_to_message.forward_sender_name;
+      });
+      bot.telegram.sendMessage(user.chatId, ctx.message.text);
+    }
     return;
   }
   switch (ctx.session.state) {
