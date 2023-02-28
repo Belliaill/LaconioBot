@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { Context, Telegraf, Markup } from "telegraf";
+import { Telegraf } from "telegraf";
 import { DB } from "./db.js";
 import LocalSession from "telegraf-session-local";
 
@@ -56,7 +56,14 @@ bot.start((ctx) => {
   }
 });
 
+// function getMembers(ctx) {
+//   const count = ctx.getChatMembersCount();
+//   for (let i = 0; i < count; i++) {}
+// }
+
 bot.on("message", (ctx) => {
+  console.log(ctx.chat);
+
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
