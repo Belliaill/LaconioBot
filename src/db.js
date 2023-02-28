@@ -6,7 +6,7 @@ export class DB {
     this.state = init;
     this.init();
   }
-   init() {
+  init() {
     if (!fs.existsSync(this.path)) {
       this.push();
     } else {

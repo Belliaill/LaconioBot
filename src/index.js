@@ -9,6 +9,7 @@ const BotState = {
   Chatting: "chatting",
   GettingDonate: "getting-donate",
   AcceptingDonate: "accepting-donate",
+  SendingNick: "sendnick",
   None: "",
 };
 
@@ -56,13 +57,20 @@ bot.start((ctx) => {
   }
 });
 
-bot.on("message", (ctx) => {
+bot.on("text", (ctx) => {
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
       const user = users.find((u) => {
         return u.name == ctx.message.reply_to_message.forward_sender_name;
       });
+      console.log(
+        ctx.message.reply_to_message,
+        ctx.chat.id,
+        users,
+        user,
+        ctx.message.reply_to_message.forward_sender_name
+      );
       bot.telegram.sendMessage(user.chatId, ctx.message.text);
     }
     return;
@@ -72,36 +80,42 @@ bot.on("message", (ctx) => {
       ctx.forwardMessage(adminChatId);
       break;
     case BotState.GettingDonate:
-      let lcoin = parseInt(ctx.message.text);
-      let counter = 0;
-      let dis = 1.02;
-      while (counter < lcoin) {
-        counter += 100;
-        dis -= 0.02;
-      }
-      ctx.reply(
-        "Вы хотите купить " +
-          ctx.message.text +
-          " лакоинов. Отправьте " +
-          Math.floor(lcoin * dis) +
-          ' гривен на карту 5375411418333733 и нажмите кнопку "Отослать"',
-        {
-          reply_markup: {
-            inline_keyboard: [[{ text: "Отослать", callback_data: "senddon" }]],
-          },
+      let lcoin = ctx.message.text;
+      if (ctx.message.text > 1000) {
+        ctx.reply(`Введите количество(числoм) лакоинов до 1000 включительно`);
+      } else {
+        let counter = 0;
+        let dis = 1.02;
+        while (counter < lcoin) {
+          counter += 100;
+          dis -= 0.02;
         }
-      );
+        let lcdis = Math.floor(lcoin * dis);
+        ctx.reply(
+          "Вы хотите купить " +
+            lcoin +
+            " лакоинов. Пожалуйста, отправьте " +
+            lcdis +
+            " гривен на карту. После этого отправьте сюда скрин с переводом и подпишите своим ником на сервере",
+          {
+            reply_markup: {
+              inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
+            },
+          }
+        );
+      }
       ctx.session.state = BotState.None;
       break;
+    case BotState.SendingNick:
+      ctx.reply("Ваш ник " + ctx.message.text);
     default:
-      ctx.reply("Err");
   }
 });
 
 bot.action("msg", (ctx) => {
   ctx.session.state = BotState.Chatting;
   ctx.answerCbQuery();
-  ctx.reply("Следующее ваше сообщение будет переслано в предложку", {
+  ctx.editMessageText("Следующее ваше сообщение будет переслано в предложку", {
     reply_markup: {
       inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
     },
@@ -130,7 +144,7 @@ bot.action("back", (ctx) => {
 //donate
 bot.action("donate", (ctx) => {
   ctx.answerCbQuery();
-  ctx.reply("Выбрать одну из функций:", {
+  ctx.editMessageText("Выбрать одну из функций:", {
     reply_markup: {
       inline_keyboard: [
         [{ text: "Купить лакоины", callback_data: "lcoin" }],
@@ -144,12 +158,21 @@ bot.action("donate", (ctx) => {
 bot.action("lcoin", (ctx) => {
   ctx.session.state = BotState.GettingDonate;
   ctx.answerCbQuery();
-  ctx.reply("Введите количество лакоинов которое хотите купить(в числах)");
+  ctx.editMessageText(
+    "Введите количество лакоинов которое хотите купить(в числах)"
+  );
 });
 
-// bot.action("senddon", (ctx) =>{
-//   ctx.session.state = BotState.AcceptingDonate
-
-// });
+bot.on("photo", (ctx) => {
+  if (ctx.chat.id != adminChatId) {
+    console.log(adminChatId);
+    ctx.forwardMessage(adminChatId);
+    сtx.reply("Сообщение было отправлено", {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
+      },
+    });
+  }
+});
 
 bot.launch();
