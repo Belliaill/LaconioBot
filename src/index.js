@@ -57,18 +57,9 @@ bot.start((ctx) => {
   }
 });
 
-<<<<<<< HEAD
-bot.on("text", (ctx) => {
-=======
-// function getMembers(ctx) {
-//   const count = ctx.getChatMembersCount();
-//   for (let i = 0; i < count; i++) {}
-// }
-
 bot.on("message", (ctx) => {
   console.log(ctx.chat);
 
->>>>>>> e3d927a0262327b1b5f8aef7703254142f9504ba
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
