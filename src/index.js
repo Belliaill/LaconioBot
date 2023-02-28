@@ -57,20 +57,18 @@ bot.start((ctx) => {
   }
 });
 
-bot.on("text", (ctx) => {
+bot.on("message", (ctx) => {
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
+      const name = ctx.message.reply_to_message.forward_sender_name
+        ? ctx.message.reply_to_message.forward_sender_name
+        : ctx.message.reply_to_message.forward_from.first_name;
       const user = users.find((u) => {
-        return u.name == ctx.message.reply_to_message.forward_sender_name;
+        return u.name == name;
       });
-      console.log(
-        ctx.message.reply_to_message,
-        ctx.chat.id,
-        users,
-        user,
-        ctx.message.reply_to_message.forward_sender_name
-      );
+      console.log("!Iportant!", ctx.message.reply_to_message);
+      console.log("Other", ctx.chat.id, users, user);
       bot.telegram.sendMessage(user.chatId, ctx.message.text);
     }
     return;
