@@ -57,7 +57,7 @@ bot.start((ctx) => {
   }
 });
 
-bot.on("message", (ctx) => {
+bot.on("text", (ctx) => {
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
@@ -67,8 +67,8 @@ bot.on("message", (ctx) => {
       const user = users.find((u) => {
         return u.name == name;
       });
-      console.log("!Iportant!", ctx.message.reply_to_message);
-      console.log("Other", ctx.chat.id, users, user);
+      // console.log("!Iportant!", ctx.message.reply_to_message);
+      // console.log("Other", ctx.chat.id, users, user);
       bot.telegram.sendMessage(user.chatId, ctx.message.text);
     }
     return;
@@ -94,7 +94,7 @@ bot.on("message", (ctx) => {
             lcoin +
             " лакоинов. Пожалуйста, отправьте " +
             lcdis +
-            " гривен на карту. После этого отправьте сюда скрин с переводом и подпишите своим ником на сервере",
+            " гривен на карту 5375411418333733 . После этого отправьте сюда скрин с переводом и подпишите своим ником на сервере",
           {
             reply_markup: {
               inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
@@ -104,8 +104,8 @@ bot.on("message", (ctx) => {
       }
       ctx.session.state = BotState.None;
       break;
-    case BotState.SendingNick:
-      ctx.reply("Ваш ник " + ctx.message.text);
+    // case BotState.SendingNick:
+    //   ctx.reply("Ваш ник " + ctx.message.text);
     default:
   }
 });
@@ -146,7 +146,7 @@ bot.action("donate", (ctx) => {
     reply_markup: {
       inline_keyboard: [
         [{ text: "Купить лакоины", callback_data: "lcoin" }],
-        [{ text: "Купить иконку на дин.карте", callback_data: "icon" }],
+        // [{ text: "Купить иконку на дин.карте", callback_data: "icon" }],
       ],
     },
   });
@@ -157,7 +157,12 @@ bot.action("lcoin", (ctx) => {
   ctx.session.state = BotState.GettingDonate;
   ctx.answerCbQuery();
   ctx.editMessageText(
-    "Введите количество лакоинов которое хотите купить(в числах)"
+    "Введите количество лакоинов которое хотите купить(в числах)",
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
+      },
+    }
   );
 });
 
@@ -165,7 +170,7 @@ bot.on("photo", (ctx) => {
   if (ctx.chat.id != adminChatId) {
     console.log(adminChatId);
     ctx.forwardMessage(adminChatId);
-    сtx.reply("Сообщение было отправлено", {
+    ctx.reply("Сообщение было отправлено", {
       reply_markup: {
         inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
       },
