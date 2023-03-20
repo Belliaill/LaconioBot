@@ -6,7 +6,7 @@ import LocalSession from "telegraf-session-local";
 dotenv.config();
 
 const Command = {
-  Ban = "/ban"
+  Ban: "/ban"
 }
 
 const BotState = {
