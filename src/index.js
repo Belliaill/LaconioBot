@@ -75,7 +75,7 @@ bot.start((ctx) => {
 bot.on("message", (ctx) => {
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.text.startsWith(Command.UnBan)) {
-      const name = ctx.message.text.split(" ").slice(0, 1).join(" ");
+      const name = ctx.message.text.split(" ").splice(0, 1).join(" ");
       console.log(name);
       const user = db.get((state) => state.users).find((u) => u.name == name);
       if (user) {
