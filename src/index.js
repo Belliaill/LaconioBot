@@ -5,6 +5,10 @@ import LocalSession from "telegraf-session-local";
 
 dotenv.config();
 
+const Command = {
+  Ban = "/ban"
+}
+
 const BotState = {
   Chatting: "chatting",
   GettingDonate: "getting-donate",
@@ -77,9 +81,22 @@ bot.on("message", (ctx) => {
       const user = users.find((u) => {
         return u.name == name;
       });
+      if (ctx.message.text == Command.Ban) {
+        if (user) {
+          db.append((state) => state.banned, user.id);
+          ctx.reply(
+            `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
+          );
+        } else {
+          ctx.reply(
+            `Пользователя с ником "${user.name}" не существует в нашей базе!`
+          );
+        }
+      } else {
+        bot.telegram.sendMessage(user.chatId, ctx.message.text);
+      }
       // console.log("!Iportant!", ctx.message.reply_to_message);
       // console.log("Other", ctx.chat.id, users, user);
-      bot.telegram.sendMessage(user.chatId, ctx.message.text);
     }
     return;
   }
@@ -132,24 +149,7 @@ bot.on("message", (ctx) => {
 
 bot.command("ban", (ctx) => {
   if (ctx.chat.id == adminChatId) {
-    if (ctx.message.reply_to_message) {
-      const name = ctx.message.reply_to_message.forward_sender_name
-        ? ctx.message.reply_to_message.forward_sender_name
-        : ctx.message.reply_to_message.forward_from.first_name;
-      const user = db.get((state) => state.users).find((u) => u.name == name);
-      if (user) {
-        db.append((state) => state.banned, user.id);
-        ctx.reply(
-          `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
-        );
-      } else {
-        ctx.reply(
-          `Пользователя с ником "${user.name}" не существует в нашей базе!`
-        );
-      }
-    } else {
-      ctx.reply(`Вы не правы, одумайтесь!`);
-    }
+
   } else {
     ctx.reply(`У вас нет прав на это действие`);
   }
