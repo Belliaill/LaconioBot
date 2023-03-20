@@ -148,6 +148,51 @@ bot.command("ban", (ctx) => {
   }
 });
 
+bot.command("ban", (ctx) => {
+  if (ctx.chat.id == adminChatId) {
+    if (ctx.message.reply_to_message) {
+      const name = ctx.message.reply_to_message.forward_sender_name
+        ? ctx.message.reply_to_message.forward_sender_name
+        : ctx.message.reply_to_message.forward_from.first_name;
+      const user = db.get((state) => state.users).find((u) => u.name == name);
+      if (user) {
+        db.append((state) => state.banned, user.id);
+        ctx.reply(
+          `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
+        );
+      } else {
+        ctx.reply(
+          `Пользователя с ником "${user.name}" не существует в нашей базе!`
+        );
+      }
+    } else {
+      ctx.reply(`Вы не правы, одумайтесь!`);
+    }
+  } else {
+    ctx.reply(`У вас нет прав на это действие`);
+  }
+});
+
+bot.command("unban", (ctx) => {
+  if (ctx.chat.id == adminChatId) {
+    const name = ctx.message.text.split(" ").slice(0, 1).join(" ");
+    console.log(name);
+    const user = db.get((state) => state.users).find((u) => u.name == name);
+    if (user) {
+      db.remove((state) => state.banned, user.id);
+      ctx.reply(
+        `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
+      );
+    } else {
+      ctx.reply(
+        `Пользователя с ником "${user.name}" не существует в нашей базе!`
+      );
+    }
+  } else {
+    ctx.reply(`У вас нет прав на это действие`);
+  }
+});
+
 bot.action("msg", async (ctx) => {
   ctx.session.state = BotState.Chatting;
   await ctx.answerCbQuery();
