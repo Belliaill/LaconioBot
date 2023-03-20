@@ -129,24 +129,6 @@ bot.on("message", (ctx) => {
   }
 });
 
-bot.command("ban", (ctx) => {
-  if (ctx.chat.id == adminChatId) {
-    const name = ctx.message.text.split(" ")[1];
-    const user = db.get((state) => state.users).find((u) => u.name == name);
-    if (user) {
-      db.append((state) => state.banned, user.id);
-      ctx.reply(
-        `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
-      );
-    } else {
-      ctx.reply(
-        `Пользователя с ником "${user.name}" не существует в нашей базе!`
-      );
-    }
-  } else {
-    ctx.reply(`У вас нет прав на это действие`);
-  }
-});
 
 bot.command("ban", (ctx) => {
   if (ctx.chat.id == adminChatId) {
