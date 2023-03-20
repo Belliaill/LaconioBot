@@ -27,4 +27,10 @@ export class DB {
   get(fn) {
     return fn(this.state);
   }
+  append(fn, val) {
+    this.pull();
+    const arr = fn(this.state);
+    arr.push(val);
+    this.push();
+  }
 }

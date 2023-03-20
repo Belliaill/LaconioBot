@@ -20,6 +20,7 @@ const donateChatId = "-1001660130168";
 
 const init = {
   users: [],
+  banned: [],
 };
 const db = new DB("database.json", init);
 
@@ -37,6 +38,21 @@ bot.use(
 
 bot.start((ctx) => {
   ctx.session.state = BotState.None;
+  const banned = db
+    .get((state) => state.banned)
+    .find((id) => ctx.from.id == id);
+  if (banned) {
+    ctx.reply("Вы забанены!");
+    return;
+  }
+  if (!db.get((state) => state.users).some((user) => user.id == ctx.chat.id)) {
+    db.update((state) => ({
+      users: [
+        ...state.users,
+        { id: ctx.from.id, chatId: ctx.chat.id, name: ctx.from.first_name },
+      ],
+    }));
+  }
   ctx.reply(
     `Приветствую, ${ctx.from.first_name}. Здесь ты можешь написать админам или купить донат.`,
     {
@@ -50,14 +66,6 @@ bot.start((ctx) => {
       },
     }
   );
-  if (!db.get((state) => state.users).some((user) => user.id == ctx.chat.id)) {
-    db.update((state) => ({
-      users: [
-        ...state.users,
-        { id: ctx.from.id, chatId: ctx.chat.id, name: ctx.from.first_name },
-      ],
-    }));
-  }
 });
 
 bot.on("text", (ctx) => {
@@ -119,6 +127,21 @@ bot.on("text", (ctx) => {
     // case BotState.SendingNick:
     //   ctx.reply("Ваш ник " + ctx.message.text);
     default:
+  }
+});
+
+bot.command("ban", (ctx) => {
+  const name = ctx.message.text.split(" ")[1];
+  const user = db.get((state) => state.users).find((u) => u.name == name);
+  if (user) {
+    db.append((state) => state.banned, user.id);
+    ctx.reply(
+      `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
+    );
+  } else {
+    ctx.reply(
+      `Пользователя с ником "${user.name}" не существует в нашей базе!`
+    );
   }
 });
 
