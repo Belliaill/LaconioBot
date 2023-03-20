@@ -6,8 +6,9 @@ import LocalSession from "telegraf-session-local";
 dotenv.config();
 
 const Command = {
-  Ban: "/ban"
-}
+  Ban: "/ban",
+  UnBan: "/unban",
+};
 
 const BotState = {
   Chatting: "chatting",
@@ -73,6 +74,22 @@ bot.start((ctx) => {
 
 bot.on("message", (ctx) => {
   if (ctx.chat.id == adminChatId) {
+    if (ctx.message.text.startsWith(Command.UnBan)) {
+      const name = ctx.message.text.split(" ").slice(0, 1).join(" ");
+      console.log(name);
+      const user = db.get((state) => state.users).find((u) => u.name == name);
+      if (user) {
+        db.remove((state) => state.banned, user.id);
+        ctx.reply(
+          `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
+        );
+      } else {
+        ctx.reply(
+          `Пользователя с ником "${user.name}" не существует в нашей базе!`
+        );
+      }
+      return;
+    }
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
       const name = ctx.message.reply_to_message.forward_sender_name
@@ -98,6 +115,13 @@ bot.on("message", (ctx) => {
       // console.log("!Iportant!", ctx.message.reply_to_message);
       // console.log("Other", ctx.chat.id, users, user);
     }
+    return;
+  }
+  const banned = db
+    .get((state) => state.banned)
+    .find((id) => ctx.from.id == id);
+  if (banned) {
+    ctx.reply("Вы забанены!");
     return;
   }
   switch (ctx.session.state) {
@@ -143,35 +167,6 @@ bot.on("message", (ctx) => {
     // case BotState.SendingNick:
     //   ctx.reply("Ваш ник " + ctx.message.text);
     default:
-  }
-});
-
-
-bot.command("ban", (ctx) => {
-  if (ctx.chat.id == adminChatId) {
-
-  } else {
-    ctx.reply(`У вас нет прав на это действие`);
-  }
-});
-
-bot.command("unban", (ctx) => {
-  if (ctx.chat.id == adminChatId) {
-    const name = ctx.message.text.split(" ").slice(0, 1).join(" ");
-    console.log(name);
-    const user = db.get((state) => state.users).find((u) => u.name == name);
-    if (user) {
-      db.remove((state) => state.banned, user.id);
-      ctx.reply(
-        `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
-      );
-    } else {
-      ctx.reply(
-        `Пользователя с ником "${user.name}" не существует в нашей базе!`
-      );
-    }
-  } else {
-    ctx.reply(`У вас нет прав на это действие`);
   }
 });
 
