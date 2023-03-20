@@ -67,7 +67,7 @@ bot.start((ctx) => {
   );
 });
 
-bot.on("text", (ctx) => {
+bot.on("message", (ctx) => {
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
