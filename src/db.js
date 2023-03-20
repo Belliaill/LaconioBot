@@ -33,10 +33,10 @@ export class DB {
     arr.push(val);
     this.push();
   }
-  remove(fn, val) {
+  remove(fn, index) {
     this.pull();
     const arr = fn(this.state);
-    arr.splice(val, 1);
+    arr.splice(index, 1);
     this.push();
   }
 }

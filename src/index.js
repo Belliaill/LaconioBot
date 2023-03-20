@@ -81,7 +81,10 @@ bot.on("message", (ctx) => {
       console.log(name);
       const user = db.get((state) => state.users).find((u) => u.name == name);
       if (user) {
-        db.remove((state) => state.banned, user.id);
+        db.remove(
+          (state) => state.banned,
+          db.get((state) => state.banned).findIndex(user.id)
+        );
         ctx.reply(
           `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
         );
