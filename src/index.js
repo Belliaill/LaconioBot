@@ -11,10 +11,10 @@ const Command = {
 };
 
 const BotState = {
-  Chatting: "chatting",
-  GettingDonate: "getting-donate",
-  AcceptingDonate: "accepting-donate",
-  SendingNick: "sendnick",
+  Chat: "chat",
+  GetDonate: "get-donate",
+  SendNick: "send-nick",
+  SendScreen: "send-nick",
   None: "",
 };
 
@@ -130,53 +130,80 @@ bot.on("message", (ctx) => {
     return;
   }
   switch (ctx.session.state) {
-    case BotState.Chatting:
+    case BotState.Chat:
       ctx.forwardMessage(adminChatId);
       break;
-    case BotState.GettingDonate:
+    case BotState.GetDonate:
       let lcoin = ctx.message.text;
       if (ctx.message.text > 1000) {
         ctx.reply(`Введите количество(числoм) лакоинов до 1000 включительно.`);
+        return;
+      }
+
+      let counter = 0;
+      let dis = 1.02;
+      while (counter < lcoin) {
+        counter += 100;
+        dis -= 0.02;
+      }
+      let lcdis = Math.round(lcoin * dis);
+
+      if (isNaN(lcdis)) {
+        ctx.reply("Введите число лакоинов до 1000 включительно", {
+          reply_markup: {
+            inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
+          },
+        });
+        return;
       } else {
-        let counter = 0;
-        let dis = 1.02;
-        while (counter < lcoin) {
-          counter += 100;
-          dis -= 0.02;
-        }
-        let lcdis = Math.round(lcoin * dis);
-        console.log(lcdis);
-        if (isNaN(lcdis)) {
-          ctx.reply("Введите число лакоинов до 1000 включительно", {
+        ctx.reply(
+          "Вы хотите купить " +
+            lcoin +
+            " лакоинов. Пожалуйста, отправьте " +
+            lcdis +
+            " гривен на карту 5375411418333733 . После этого отправьте сюда скрин с переводом и подпишите своим ником на сервере.",
+          {
             reply_markup: {
               inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
             },
-          });
-        } else {
-          ctx.reply(
-            "Вы хотите купить " +
-              lcoin +
-              " лакоинов. Пожалуйста, отправьте " +
-              lcdis +
-              " гривен на карту 5375411418333733 . После этого отправьте сюда скрин с переводом и подпишите своим ником на сервере.",
-            {
-              reply_markup: {
-                inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
-              },
-            }
-          );
-        }
+          }
+        );
       }
+      ctx.session.lcoinCount = lcdis;
+      ctx.reply("Введите ник");
+      ctx.session.state = BotState.SendNick;
+      break;
+    case BotState.SendNick:
+      if (ctx.message.text) {
+        ctx.reply("Попрубуйте ещё раз");
+        return;
+      }
+      ctx.session.nick = ctx.message.text;
+      ctx.forwardMessage(donateChatId);
+      ctx.reply("Ваш ник " + ctx.message.text);
+      ctx.session.state = BotState.SendScreen;
+      break;
+    case BotState.SendScreen:
+      if (ctx.message.photo) {
+        ctx.reply("Попрубуйте ещё раз");
+        return;
+      }
+      ctx.session.nick = ctx.message.photo;
+      ctx.forwardMessage(donateChatId);
+
+      const nick = ctx.session.nick;
+      const count = ctx.session.lcoinCount;
+      // ctx.reply();
       ctx.session.state = BotState.None;
       break;
-    // case BotState.SendingNick:
-    //   ctx.reply("Ваш ник " + ctx.message.text);
-    default:
+    case BotState.None:
+      ctx.reply("Выбирете действия");
+      break;
   }
 });
 
 bot.action("msg", async (ctx) => {
-  ctx.session.state = BotState.Chatting;
+  ctx.session.state = BotState.Chat;
   await ctx.answerCbQuery();
   await ctx.editMessageText(
     "Следующее ваше сообщение будет переслано в предложку.",
@@ -222,7 +249,7 @@ bot.action("donate", async (ctx) => {
 
 //lcoin
 bot.action("lcoin", async (ctx) => {
-  ctx.session.state = BotState.GettingDonate;
+  ctx.session.state = BotState.GetDonate;
   await ctx.answerCbQuery();
   await ctx.editMessageText(
     "Введите количество лакоинов которое хотите купить(в числах).",
@@ -235,9 +262,8 @@ bot.action("lcoin", async (ctx) => {
 });
 
 bot.on("photo", async (ctx) => {
-  if (ctx.chat.id != donateChatId && BotState.GettingDonate) {
+  if (ctx.chat.id != donateChatId && BotState.GetDonate) {
     ctx.forwardMessage(donateChatId);
-
     ctx.reply("Сообщение было отправлено.", {
       reply_markup: {
         inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
