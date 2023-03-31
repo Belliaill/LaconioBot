@@ -72,7 +72,7 @@ bot.start((ctx) => {
   );
 });
 
-bot.on("message", (ctx) => {
+bot.on("message", async (ctx) => {
   if (ctx.chat.id == adminChatId) {
     if (ctx.message.text.startsWith(Command.UnBan)) {
       const parts = ctx.message.text.split(" ");
@@ -85,11 +85,11 @@ bot.on("message", (ctx) => {
           (state) => state.banned,
           db.get((state) => state.banned).indexOf(user.id)
         );
-        ctx.reply(
+        await ctx.reply(
           `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
         );
       } else {
-        ctx.reply(
+        await ctx.reply(
           `Пользователя с ником "${user.name}" не существует в нашей базе!`
         );
       }
@@ -106,16 +106,16 @@ bot.on("message", (ctx) => {
       if (ctx.message.text == Command.Ban) {
         if (user) {
           db.append((state) => state.banned, user.id);
-          ctx.reply(
+          await ctx.reply(
             `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
           );
         } else {
-          ctx.reply(
+          await ctx.reply(
             `Пользователя с ником "${user.name}" не существует в нашей базе!`
           );
         }
       } else {
-        bot.telegram.sendMessage(user.chatId, ctx.message.text);
+        await bot.telegram.sendMessage(user.chatId, ctx.message.text);
       }
       // console.log("!Iportant!", ctx.message.reply_to_message);
       // console.log("Other", ctx.chat.id, users, user);
@@ -126,17 +126,19 @@ bot.on("message", (ctx) => {
     .get((state) => state.banned)
     .find((id) => ctx.from.id == id);
   if (banned) {
-    ctx.reply("Вы забанены!");
+    await ctx.reply("Вы забанены!");
     return;
   }
   switch (ctx.session.state) {
     case BotState.Chat:
-      ctx.forwardMessage(adminChatId);
+      await ctx.forwardMessage(adminChatId);
       break;
     case BotState.GetDonate:
       let lcoin = ctx.message.text;
       if (ctx.message.text > 1000) {
-        ctx.reply(`Введите количество(числoм) лакоинов до 1000 включительно.`);
+        await ctx.reply(
+          `Введите количество(числoм) лакоинов до 1000 включительно.`
+        );
         return;
       }
 
@@ -149,14 +151,14 @@ bot.on("message", (ctx) => {
       let lcdis = Math.round(lcoin * dis);
 
       if (isNaN(lcdis)) {
-        ctx.reply("Введите число лакоинов до 1000 включительно", {
+        await ctx.reply("Введите число лакоинов до 1000 включительно", {
           reply_markup: {
             inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
           },
         });
         return;
       } else {
-        ctx.reply(
+        await ctx.reply(
           "Вы хотите купить " +
             lcoin +
             " лакоинов. Пожалуйста, отправьте " +
@@ -170,26 +172,26 @@ bot.on("message", (ctx) => {
         );
       }
       ctx.session.lcoinCount = lcdis;
-      ctx.reply("Введите ник");
+      await ctx.reply("Введите ник");
       ctx.session.state = BotState.SendNick;
       break;
     case BotState.SendNick:
       if (ctx.message.text) {
-        ctx.reply("Попрубуйте ещё раз");
+        await ctx.reply("Попрубуйте ещё раз");
         return;
       }
       ctx.session.nick = ctx.message.text;
-      ctx.forwardMessage(donateChatId);
-      ctx.reply("Ваш ник " + ctx.message.text);
+      await ctx.forwardMessage(donateChatId);
+      await ctx.reply("Ваш ник " + ctx.message.text);
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
       if (ctx.message.photo) {
-        ctx.reply("Попрубуйте ещё раз");
+        await ctx.reply("Попрубуйте ещё раз");
         return;
       }
       ctx.session.nick = ctx.message.photo;
-      ctx.forwardMessage(donateChatId);
+      await ctx.forwardMessage(donateChatId);
 
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
@@ -259,17 +261,6 @@ bot.action("lcoin", async (ctx) => {
       },
     }
   );
-});
-
-bot.on("photo", async (ctx) => {
-  if (ctx.chat.id != donateChatId && BotState.GetDonate) {
-    ctx.forwardMessage(donateChatId);
-    ctx.reply("Сообщение было отправлено.", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
-      },
-    });
-  }
 });
 
 bot.launch();
