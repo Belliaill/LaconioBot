@@ -176,7 +176,7 @@ bot.on("message", async (ctx) => {
       ctx.session.state = BotState.SendNick;
       break;
     case BotState.SendNick:
-      if (ctx.message.text) {
+      if (!ctx.message.text) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
@@ -186,13 +186,13 @@ bot.on("message", async (ctx) => {
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
-      if (ctx.message.photo) {
+      if (!ctx.message.photo) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
       ctx.session.nick = ctx.message.photo;
       await ctx.forwardMessage(donateChatId);
-
+      
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
