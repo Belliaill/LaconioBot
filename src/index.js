@@ -192,7 +192,7 @@ bot.on("message", async (ctx) => {
       }
       ctx.session.nick = ctx.message.photo;
       await ctx.forwardMessage(donateChatId);
-      
+
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
