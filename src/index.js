@@ -20,7 +20,7 @@ const BotState = {
 
 const adminChatId = process.env.ADMIN_CHAT_ID;
 
-const donateChatId = "-1001660130168";
+const donateChatId = process.env.DONATE_CHAT_ID;
 //process.env.DONATE_CHAT_ID;
 
 const init = {
@@ -192,10 +192,13 @@ bot.on("message", async (ctx) => {
       }
       ctx.session.nick = ctx.message.photo;
       await ctx.forwardMessage(donateChatId);
-
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
+      ctx.sendMessage(
+        donateChatId,
+        "Пользователь " + nick + " задонатил на " + count + " лакоинов"
+      );
       ctx.session.state = BotState.None;
       break;
     case BotState.None:
