@@ -73,7 +73,7 @@ bot.start((ctx) => {
 });
 
 bot.on("message", async (ctx) => {
-  if (ctx.chat.id == adminChatId) {
+  if (ctx.chat.id == adminChatId || ctx.chat.id == donateChatId) {
     if (ctx.message.text.startsWith(Command.UnBan)) {
       const parts = ctx.message.text.split(" ");
       parts.splice(0, 1);
@@ -181,21 +181,31 @@ bot.on("message", async (ctx) => {
         return;
       }
       ctx.session.nick = ctx.message.text;
-      await ctx.forwardMessage(donateChatId);
-      await ctx.reply("Ваш ник " + ctx.message.text);
+      // await ctx.forwardMessage(donateChatId);
+      await ctx.reply("Ваш ник " + ctx.message.text, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "Подтвердить", callback_data: "acceptnick" },
+              { text: "Назад", callback_data: "back" },
+            ],
+          ],
+        },
+      });
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
+      // ctx.reply("Скиньте скнрин перевода денег");
       if (!ctx.message.photo) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
-      ctx.session.nick = ctx.message.photo;
+      // ctx.session.nick = ctx.message.photo;
       await ctx.forwardMessage(donateChatId);
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
-      ctx.sendMessage(
+      bot.telegram.sendMessage(
         donateChatId,
         "Пользователь " + nick + " задонатил на " + count + " лакоинов"
       );
@@ -264,6 +274,12 @@ bot.action("lcoin", async (ctx) => {
       },
     }
   );
+});
+
+bot.action("acceptnick", async (ctx) => {
+  ctx.session.state = BotState.SendScreen;
+  await ctx.answerCbQuery();
+  ctx.reply("Скиньте скнрин перевода денег");
 });
 
 bot.launch();
