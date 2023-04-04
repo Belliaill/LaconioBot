@@ -186,8 +186,8 @@ bot.on("message", async (ctx) => {
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
-      let keys = Object.keys(ctx.message);
-      if (!keys.includes("photo")) {
+      console.log(ctx.updateSubTypes, ctx.updateType);
+      if (!ctx.updateSubTypes.includes("photo")) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
