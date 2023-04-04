@@ -186,13 +186,14 @@ bot.on("message", async (ctx) => {
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
-      if (!ctx.message.photo) {
+      let keys = Object.keys(ctx.message);
+      if (!keys.includes("photo")) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
       ctx.session.nick = ctx.message.photo;
       await ctx.forwardMessage(donateChatId);
-      
+
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
