@@ -14,7 +14,7 @@ const BotState = {
   Chat: "chat",
   GetDonate: "get-donate",
   SendNick: "send-nick",
-  SendScreen: "send-nick",
+  SendScreen: "send-screen",
   None: "",
 };
 
@@ -186,8 +186,7 @@ bot.on("message", async (ctx) => {
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
-      console.log(ctx.updateSubTypes, ctx.updateType);
-      if (!ctx.updateSubTypes.includes("photo")) {
+      if (!ctx.message.photo) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
