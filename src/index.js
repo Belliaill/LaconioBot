@@ -15,6 +15,8 @@ const BotState = {
   GetDonate: "get-donate",
   SendNick: "send-nick",
   SendScreen: "send-screen",
+  VideoSent: "video-sent",
+  StickerSent: "sticker-sent",
   None: "",
 };
 
@@ -74,6 +76,7 @@ bot.start((ctx) => {
 
 bot.on("message", async (ctx) => {
   if (ctx.chat.id == adminChatId || ctx.chat.id == donateChatId) {
+    if (!ctx.message.text) return;
     if (ctx.message.text.startsWith(Command.UnBan)) {
       const parts = ctx.message.text.split(" ");
       parts.splice(0, 1);
@@ -95,7 +98,11 @@ bot.on("message", async (ctx) => {
       }
       return;
     }
-    if (ctx.message.reply_to_message) {
+    if (
+      ctx.message.reply_to_message &&
+      ctx.chat.id != adminChatId &&
+      ctx.chat.id != donateChatId
+    ) {
       const users = db.get((state) => state.users);
       const name = ctx.message.reply_to_message.forward_sender_name
         ? ctx.message.reply_to_message.forward_sender_name
@@ -132,6 +139,11 @@ bot.on("message", async (ctx) => {
   switch (ctx.session.state) {
     case BotState.Chat:
       await ctx.forwardMessage(adminChatId);
+      ctx.reply("Ваше сообщение было доставлено админам", {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
+        },
+      });
       break;
     case BotState.GetDonate:
       let lcoin = ctx.message.text;
@@ -196,7 +208,11 @@ bot.on("message", async (ctx) => {
       break;
     case BotState.SendScreen:
       // ctx.reply("Скиньте скнрин перевода денег");
-      if (!ctx.message.photo) {
+      if (
+        !ctx.message.photo &&
+        ctx.chat.id != adminChatId &&
+        ctx.chat.id != donateChatId
+      ) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
@@ -210,7 +226,38 @@ bot.on("message", async (ctx) => {
         "Пользователь " + nick + " задонатил на " + count + " лакоинов"
       );
       ctx.session.state = BotState.None;
+      await ctx.reply(
+        `Приветствую, ${ctx.from.first_name}. Здесь ты можешь написать админам или купить донат.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "Предложка", callback_data: "msg" },
+                { text: "Донат", callback_data: "donate" },
+              ],
+            ],
+          },
+        }
+      );
       break;
+    case BotState.VideoSent:
+      if (
+        ctx.message.video &&
+        ctx.chat.id != adminChatId &&
+        ctx.chat.id != donateChatId
+      ) {
+        ctx.reply("К сожалению, я не могу ничего делать с видео");
+      }
+
+    case BotState.StickerSent:
+      if (
+        ctx.message.sticker &&
+        ctx.chat.id != adminChatId &&
+        ctx.chat.id != donateChatId
+      ) {
+        ctx.reply("К сожалению, я не могу ничего делать со стикером");
+      }
+
     case BotState.None:
       ctx.reply("Выбирете действия");
       break;
