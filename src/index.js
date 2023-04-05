@@ -98,11 +98,7 @@ bot.on("message", async (ctx) => {
       }
       return;
     }
-    if (
-      ctx.message.reply_to_message &&
-      ctx.chat.id != adminChatId &&
-      ctx.chat.id != donateChatId
-    ) {
+    if (ctx.message.reply_to_message) {
       const users = db.get((state) => state.users);
       const name = ctx.message.reply_to_message.forward_sender_name
         ? ctx.message.reply_to_message.forward_sender_name
