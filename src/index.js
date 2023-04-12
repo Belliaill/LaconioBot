@@ -15,12 +15,14 @@ const BotState = {
   GetDonate: "get-donate",
   SendNick: "send-nick",
   SendScreen: "send-screen",
+  VideoSent: "video-sent",
+  StickerSent: "sticker-sent",
   None: "",
 };
 
 const adminChatId = process.env.ADMIN_CHAT_ID;
 
-const donateChatId = "-1001660130168";
+const donateChatId = process.env.DONATE_CHAT_ID;
 //process.env.DONATE_CHAT_ID;
 
 const init = {
@@ -73,7 +75,8 @@ bot.start((ctx) => {
 });
 
 bot.on("message", async (ctx) => {
-  if (ctx.chat.id == adminChatId) {
+  if (ctx.chat.id == adminChatId || ctx.chat.id == donateChatId) {
+    if (!ctx.message.text) return;
     if (ctx.message.text.startsWith(Command.UnBan)) {
       const parts = ctx.message.text.split(" ");
       parts.splice(0, 1);
@@ -135,6 +138,11 @@ bot.on("message", async (ctx) => {
   switch (ctx.session.state) {
     case BotState.Chat:
       await ctx.forwardMessage(adminChatId);
+      ctx.reply("Ваше сообщение было доставлено админам", {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
+        },
+      });
       break;
     case BotState.GetDonate:
       let lcoin = ctx.message.text;
@@ -184,23 +192,71 @@ bot.on("message", async (ctx) => {
         return;
       }
       ctx.session.nick = ctx.message.text;
-      await ctx.forwardMessage(donateChatId);
-      await ctx.reply("Ваш ник " + ctx.message.text);
+      // await ctx.forwardMessage(donateChatId);
+      await ctx.reply("Ваш ник " + ctx.message.text, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "Подтвердить", callback_data: "acceptnick" },
+              { text: "Назад", callback_data: "back" },
+            ],
+          ],
+        },
+      });
       ctx.session.state = BotState.SendScreen;
       break;
     case BotState.SendScreen:
-      if (!ctx.message.photo) {
+      // ctx.reply("Скиньте скнрин перевода денег");
+      if (
+        !ctx.message.photo &&
+        ctx.chat.id != adminChatId &&
+        ctx.chat.id != donateChatId
+      ) {
         await ctx.reply("Попрубуйте ещё раз");
         return;
       }
-      ctx.session.nick = ctx.message.photo;
+      // ctx.session.nick = ctx.message.photo;
       await ctx.forwardMessage(donateChatId);
-
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
+      bot.telegram.sendMessage(
+        donateChatId,
+        "Пользователь " + nick + " задонатил на " + count + " лакоинов"
+      );
       ctx.session.state = BotState.None;
+      await ctx.reply(
+        `Приветствую, ${ctx.from.first_name}. Здесь ты можешь написать админам или купить донат.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "Предложка", callback_data: "msg" },
+                { text: "Донат", callback_data: "donate" },
+              ],
+            ],
+          },
+        }
+      );
       break;
+    case BotState.VideoSent:
+      if (
+        ctx.message.video &&
+        ctx.chat.id != adminChatId &&
+        ctx.chat.id != donateChatId
+      ) {
+        ctx.reply("К сожалению, я не могу ничего делать с видео");
+      }
+
+    case BotState.StickerSent:
+      if (
+        ctx.message.sticker &&
+        ctx.chat.id != adminChatId &&
+        ctx.chat.id != donateChatId
+      ) {
+        ctx.reply("К сожалению, я не могу ничего делать со стикером");
+      }
+
     case BotState.None:
       ctx.reply("Выбирете действия");
       break;
@@ -264,6 +320,12 @@ bot.action("lcoin", async (ctx) => {
       },
     }
   );
+});
+
+bot.action("acceptnick", async (ctx) => {
+  ctx.session.state = BotState.SendScreen;
+  await ctx.answerCbQuery();
+  ctx.reply("Скиньте скнрин перевода денег");
 });
 
 bot.launch();
