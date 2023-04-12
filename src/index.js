@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
-import { DB } from "./db.js";
 import LocalSession from "telegraf-session-local";
 
 dotenv.config();
@@ -21,17 +20,7 @@ const BotState = {
 };
 
 const adminChatId = process.env.ADMIN_CHAT_ID;
-
 const donateChatId = process.env.DONATE_CHAT_ID;
-//process.env.DONATE_CHAT_ID;
-
-const init = {
-  users: [],
-  banned: [],
-};
-const db = new DB("database.json", init);
-
-console.log(process.env.BOT_TOKEN);
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -45,20 +34,6 @@ bot.use(
 
 bot.start((ctx) => {
   ctx.session.state = BotState.None;
-  const banned = db
-    .get((state) => state.banned)
-    .find((id) => ctx.from.id == id);
-  if (banned) {
-    ctx.reply("Вы забанены!");
-    return;
-  }
-  if (!db.get((state) => state.users).some((user) => user.id == ctx.chat.id)) {
-    db.append((state) => state.users, {
-      id: ctx.from.id,
-      chatId: ctx.chat.id,
-      name: ctx.from.first_name,
-    });
-  }
   ctx.reply(
     `Приветствую, ${ctx.from.first_name}. Здесь ты можешь написать админам или купить донат.`,
     {
@@ -76,19 +51,13 @@ bot.start((ctx) => {
 
 bot.on("message", async (ctx) => {
   if (ctx.chat.id == adminChatId || ctx.chat.id == donateChatId) {
-    if (!ctx.message.text) return;
-    if (ctx.message.text.startsWith(Command.UnBan)) {
+
+    if (!ctx.message.text && ctx.message.text.startsWith(Command.UnBan)) {
       const parts = ctx.message.text.split(" ");
       parts.splice(0, 1);
-      const name = parts.join(" ");
-      console.log(name);
-      const user = db.get((state) => state.users).find((u) => u.name == name);
+      const id = parts.join(" ");
       if (user) {
-        await ctx.unbanChatMember(user.id);
-        db.remove(
-          (state) => state.banned,
-          db.get((state) => state.banned).indexOf(user.id)
-        );
+        await ctx.unbanChatMember(id);
         await ctx.reply(
           `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
         );
@@ -100,39 +69,19 @@ bot.on("message", async (ctx) => {
       return;
     }
     if (ctx.message.reply_to_message) {
-      const users = db.get((state) => state.users);
-      const name = ctx.message.reply_to_message.forward_sender_name
-        ? ctx.message.reply_to_message.forward_sender_name
-        : ctx.message.reply_to_message.forward_from.first_name;
+      const user = ctx.message.reply_to_message.from;
+
       console.log("!Iportant!", ctx.message.reply_to_message);
-      const user = users.find((u) => {
-        return u.name == name;
-      });
-      if (ctx.message.text == Command.Ban) {
-        if (user) {
-          await ctx.banChatMember(user.id);
-          db.append((state) => state.banned, user.id);
-          await ctx.reply(
-            `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
-          );
-        } else {
-          await ctx.reply(
-            `Пользователя с ником "${user.name}" не существует в нашей базе!`
-          );
-        }
+
+      if (!ctx.message.text && ctx.message.text == Command.Ban) {
+        await ctx.banChatMember(user.id);
+        await ctx.reply(
+          `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
+        );
       } else {
         await bot.telegram.sendMessage(user.chatId, ctx.message.text);
       }
-      // console.log("!Iportant!", ctx.message.reply_to_message);
-      // console.log("Other", ctx.chat.id, users, user);
     }
-    return;
-  }
-  const banned = db
-    .get((state) => state.banned)
-    .find((id) => ctx.from.id == id);
-  if (banned) {
-    await ctx.reply("Вы забанены!");
     return;
   }
   switch (ctx.session.state) {
