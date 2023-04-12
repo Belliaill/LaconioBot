@@ -73,7 +73,7 @@ bot.on("message", async (ctx) => {
       console.log("!Message!", ctx.message);
       console.log("!Iportant!", ctx.message.reply_to_message);
 
-      if (!ctx.message.text && ctx.message.text == Command.Ban) {
+      if (ctx.message.text && ctx.message.text == Command.Ban) {
         await ctx.banChatMember(id);
         await ctx.reply(
           `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
