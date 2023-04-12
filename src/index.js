@@ -81,6 +81,7 @@ bot.on("message", async (ctx) => {
       console.log(name);
       const user = db.get((state) => state.users).find((u) => u.name == name);
       if (user) {
+        await ctx.unbanChatMember(user.id);
         db.remove(
           (state) => state.banned,
           db.get((state) => state.banned).indexOf(user.id)
@@ -100,11 +101,13 @@ bot.on("message", async (ctx) => {
       const name = ctx.message.reply_to_message.forward_sender_name
         ? ctx.message.reply_to_message.forward_sender_name
         : ctx.message.reply_to_message.forward_from.first_name;
+      console.log("!Iportant!", ctx.message.reply_to_message);
       const user = users.find((u) => {
         return u.name == name;
       });
       if (ctx.message.text == Command.Ban) {
         if (user) {
+          await ctx.banChatMember(user.id);
           db.append((state) => state.banned, user.id);
           await ctx.reply(
             `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
