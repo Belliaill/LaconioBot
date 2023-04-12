@@ -61,9 +61,6 @@ bot.on("message", async (ctx) => {
           `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
         );
       } else {
-        await ctx.reply(
-          `Пользователя с ником "${user.name}" не существует в нашей базе!`
-        );
       }
       return;
     }
