@@ -57,13 +57,8 @@ bot.on("message", async (ctx) => {
       const id = parts.join(" ");
       if (user) {
         await ctx.unbanChatMember(id);
-        await ctx.reply(
-          `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
-        );
+        await ctx.reply(`Пользователь с ником раззабанен!`);
       } else {
-        await ctx.reply(
-          `Пользователя с ником "${user.name}" не существует в нашей базе!`
-        );
       }
       return;
     }
@@ -75,9 +70,7 @@ bot.on("message", async (ctx) => {
 
       if (ctx.message.text && ctx.message.text == Command.Ban) {
         await ctx.banChatMember(id);
-        await ctx.reply(
-          `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
-        );
+        await ctx.reply(`Пользователь забанен!`);
       } else {
         await bot.telegram.sendMessage(id, `Ответ:\n${ctx.message.text}`);
       }
