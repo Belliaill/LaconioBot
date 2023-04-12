@@ -51,7 +51,6 @@ bot.start((ctx) => {
 
 bot.on("message", async (ctx) => {
   if (ctx.chat.id == adminChatId || ctx.chat.id == donateChatId) {
-
     if (!ctx.message.text && ctx.message.text.startsWith(Command.UnBan)) {
       const parts = ctx.message.text.split(" ");
       parts.splice(0, 1);
@@ -69,25 +68,29 @@ bot.on("message", async (ctx) => {
       return;
     }
     if (ctx.message.reply_to_message) {
-      const user = ctx.message.reply_to_message.from;
+      const id = ctx.message.reply_to_message.text.split("\n")[0];
 
+      console.log("!Message!", ctx.message);
       console.log("!Iportant!", ctx.message.reply_to_message);
 
       if (!ctx.message.text && ctx.message.text == Command.Ban) {
-        await ctx.banChatMember(user.id);
+        await ctx.banChatMember(id);
         await ctx.reply(
           `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
         );
       } else {
-        await bot.telegram.sendMessage(user.chatId, ctx.message.text);
+        await bot.telegram.sendMessage(id, `Ответ:\n${ctx.message.text}`);
       }
     }
     return;
   }
   switch (ctx.session.state) {
     case BotState.Chat:
-      await ctx.forwardMessage(adminChatId);
-      ctx.reply("Ваше сообщение было доставлено админам", {
+      await bot.telegram.sendMessage(
+        adminChatId,
+        `${ctx.from.id}\nОт ${ctx.from.first_name}\n${ctx.message.text}`
+      );
+      await ctx.reply("Ваше сообщение было доставлено админам", {
         reply_markup: {
           inline_keyboard: [[{ text: "Назад", callback_data: "back" }]],
         },
@@ -169,7 +172,7 @@ bot.on("message", async (ctx) => {
       const nick = ctx.session.nick;
       const count = ctx.session.lcoinCount;
       // ctx.reply();
-      bot.telegram.sendMessage(
+      await bot.telegram.sendMessage(
         donateChatId,
         "Пользователь " + nick + " задонатил на " + count + " лакоинов"
       );
