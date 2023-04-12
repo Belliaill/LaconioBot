@@ -56,7 +56,7 @@ bot.on("message", async (ctx) => {
       parts.splice(0, 1);
       const id = parts.join(" ");
       if (user) {
-        await bot.telegram.unbanChatMember(id);
+        await bot.telegram.unbanChatSenderChat(id);
         await ctx.reply(
           `Пользователь с ником "${user.name}" раззабанен по айди ${user.id}!`
         );
@@ -74,7 +74,7 @@ bot.on("message", async (ctx) => {
       console.log("!Iportant!", ctx.message.reply_to_message);
 
       if (ctx.message.text && ctx.message.text == Command.Ban) {
-        await bot.telegram.banChatMember(id);
+        await bot.telegram.banChatSenderChat(id);
         await ctx.reply(
           `Пользователь с ником "${user.name}" забанен по айди ${user.id}!`
         );
